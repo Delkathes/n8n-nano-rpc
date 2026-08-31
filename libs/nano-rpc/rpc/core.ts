@@ -1,4 +1,9 @@
-import { NodeOperationError, type IExecuteFunctions, type IHttpRequestMethods } from 'n8n-workflow';
+import {
+	NodeOperationError,
+	sleep,
+	type IExecuteFunctions,
+	type IHttpRequestMethods,
+} from 'n8n-workflow';
 import type { INanoRPCConfig, INanoRPCResponse } from '../../../types/rpc';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -128,7 +133,7 @@ export async function nanoRPCCall<T = INanoRPCResponse>(
 			const canRetry = attempt < maxRetries && shouldRetry(error);
 			if (canRetry) {
 				// Small backoff so transient failures have a chance to clear.
-				await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+				await sleep(250 * (attempt + 1));
 				continue;
 			}
 
