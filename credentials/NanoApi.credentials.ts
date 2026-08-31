@@ -10,7 +10,7 @@ import {
 export class NanoApi implements ICredentialType {
 	name = 'nanoApi';
 	displayName = 'Nano API';
-	icon = 'file:../nodes/Nano/nano.svg' as const;
+	icon = 'file:nano.svg' as const;
 	documentationUrl = 'https://docs.nano.org/commands/rpc-protocol/';
 	properties: INodeProperties[] = [
 		{
