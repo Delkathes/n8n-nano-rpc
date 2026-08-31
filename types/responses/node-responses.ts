@@ -18,8 +18,9 @@ export interface BalanceResponse {
 	pendingRaw: string;
 	balanceFormatted: string;
 	pendingFormatted: string;
-	receivable: string;
-	receivableRaw: string;
+	/** Only present on node v24+ */
+	receivable?: string;
+	receivableRaw?: string;
 }
 
 export interface AccountInfoResponse {
@@ -500,11 +501,9 @@ export interface GetUnopenedResponse {
 // ============ Confirmation Responses ============
 
 export interface GetConfirmationActiveResponse {
-	confirmations: {
-		confirmations: string[];
-		unconfirmed: string;
-		confirmed: string;
-	};
+	confirmations: string[];
+	unconfirmed: string;
+	confirmed: string;
 }
 
 export interface GetConfirmationHeightCurrentlyProcessingResponse {

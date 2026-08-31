@@ -81,6 +81,36 @@ export const debugNanoRPCParameterProperties: INodeProperties[] = [
 		description: 'Starting key for unchecked query (optional)',
 	},
 	{
+		displayName: 'Count',
+		name: 'uncheckedKeysCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getUncheckedKeys'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of unchecked keys to return',
+	},
+	{
+		displayName: 'Count',
+		name: 'uncheckedCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getUnchecked'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of unchecked blocks to return',
+	},
+	{
 		displayName: 'Confirm Stop Node',
 		name: 'stopNodeConfirmed',
 		type: 'boolean',

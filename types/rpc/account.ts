@@ -8,7 +8,8 @@
 export interface AccountBalanceRPCResponse {
 	balance: string;
 	pending: string;
-	receivable: string;
+	/** Only present on node v24+ */
+	receivable?: string;
 }
 
 /** Response from account_block_count */
@@ -39,6 +40,7 @@ export interface AccountWeightRPCResponse {
 /** Response from accounts_balances */
 export interface AccountsBalancesRPCResponse {
 	balances: Record<string, { balance: string; pending: string; receivable: string }>;
+	errors?: Record<string, string>;
 }
 
 /** Response from accounts_frontiers */

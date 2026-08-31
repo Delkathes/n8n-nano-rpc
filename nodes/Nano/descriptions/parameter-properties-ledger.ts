@@ -31,6 +31,21 @@ export const ledgerNanoRPCParameterProperties: INodeProperties[] = [
 		description: 'Number of blocks to skip from the starting block (v18.0+)',
 	},
 	{
+		displayName: 'Count',
+		name: 'chainCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getChain'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of blocks to return',
+	},
+	{
 		displayName: 'Reverse Direction',
 		name: 'chainReverse',
 		type: 'boolean',
@@ -55,6 +70,51 @@ export const ledgerNanoRPCParameterProperties: INodeProperties[] = [
 		default: '',
 		placeholder: 'nano_1abc...',
 		description: 'Starting account for unopened query (optional)',
+	},
+	{
+		displayName: 'Count',
+		name: 'unopenedCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getUnopened'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of unopened accounts to return',
+	},
+	{
+		displayName: 'Count',
+		name: 'successorsCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getSuccessors'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of successor blocks to return',
+	},
+	{
+		displayName: 'Count',
+		name: 'frontiersCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['getFrontiers'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of accounts to return',
 	},
 	{
 		displayName: 'Starting Account',

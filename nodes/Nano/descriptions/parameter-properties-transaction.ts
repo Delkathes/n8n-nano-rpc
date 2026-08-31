@@ -298,6 +298,21 @@ export const transactionNanoRPCParameterProperties: INodeProperties[] = [
 		description: 'Epoch number',
 	},
 	{
+		displayName: 'Count',
+		name: 'epochCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['epochUpgrade'],
+			},
+		},
+		default: 1,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of accounts to upgrade',
+	},
+	{
 		displayName: 'Epoch Key',
 		name: 'epochKey',
 		type: 'string',

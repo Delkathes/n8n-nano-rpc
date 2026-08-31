@@ -171,6 +171,21 @@ export const networkNanoRPCParameterProperties: INodeProperties[] = [
 		description: 'Hash of block to republish',
 	},
 	{
+		displayName: 'Count',
+		name: 'republishCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['republish'],
+			},
+		},
+		default: 1,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of blocks to republish (starts from the given hash)',
+	},
+	{
 		displayName: 'Sources',
 		name: 'sources',
 		type: 'number',

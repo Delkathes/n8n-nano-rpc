@@ -11,7 +11,7 @@ import {
 
 import { createHmac, timingSafeEqual } from 'crypto';
 
-import { rawToNano } from '../../utils/conversions';
+import { nanoToRaw, rawToNano } from '../../utils/conversions';
 
 import { verifyBlockSignature } from '../../utils/block-signature';
 
@@ -23,8 +23,8 @@ import type { BlockContents } from '../../types';
 interface NanoFilterOptions {
 	accounts?: string;
 	subtypes?: string[];
-	minAmount?: number;
-	maxAmount?: number;
+	minAmount?: string;
+	maxAmount?: string;
 }
 
 /**
@@ -54,7 +54,6 @@ export class NanoTrigger implements INodeType {
 		},
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
-		usableAsTool: undefined,
 		credentials: [
 			{
 				name: 'nanoApi',
@@ -113,26 +112,20 @@ export class NanoTrigger implements INodeType {
 					{
 						displayName: 'Minimum Amount (Nano)',
 						name: 'minAmount',
-						type: 'number',
-						default: 0,
+						type: 'string',
+						default: '',
+						placeholder: '0.000001',
 						description:
-							'Only trigger for confirmations with at least this amount in Nano. Set to 0 to disable.',
-						typeOptions: {
-							minValue: 0,
-							numberPrecision: 30,
-						},
+							'Only trigger for confirmations with at least this amount in NANO (decimal string). Leave empty to disable.',
 					},
 					{
 						displayName: 'Maximum Amount (Nano)',
 						name: 'maxAmount',
-						type: 'number',
-						default: 0,
+						type: 'string',
+						default: '',
+						placeholder: '10',
 						description:
-							'Only trigger for confirmations with at most this amount in Nano. Set to 0 to disable.',
-						typeOptions: {
-							minValue: 0,
-							numberPrecision: 30,
-						},
+							'Only trigger for confirmations with at most this amount in NANO (decimal string). Leave empty to disable.',
 					},
 				],
 			},
@@ -237,8 +230,18 @@ export class NanoTrigger implements INodeType {
 			);
 		}
 
-		// Convert amount to Nano
+		// Convert amount to Nano (display value; raw is authoritative)
 		const amountNano = Number(rawToNano(bodyData.amount));
+
+		// Build raw-unit filter thresholds from the decimal-string UI inputs
+		let minAmountRaw: string | undefined;
+		let maxAmountRaw: string | undefined;
+		if (filterOptions.minAmount && filterOptions.minAmount.trim().length > 0) {
+			minAmountRaw = filterAmountToRaw(this, filterOptions.minAmount, 'Minimum Amount');
+		}
+		if (filterOptions.maxAmount && filterOptions.maxAmount.trim().length > 0) {
+			maxAmountRaw = filterAmountToRaw(this, filterOptions.maxAmount, 'Maximum Amount');
+		}
 
 		// Get workflow-scoped static data for deduplication
 		let seenHashes: Record<string, number> = {};
@@ -261,7 +264,13 @@ export class NanoTrigger implements INodeType {
 		}
 
 		// Apply filters
-		if (shouldFilterWebhook(bodyData, filterOptions, amountNano, seenHashes, deduplicateHash)) {
+		if (shouldFilterWebhook(bodyData, filterOptions, minAmountRaw, maxAmountRaw)) {
+			return { noWebhookResponse: true };
+		}
+
+		// Deduplicate by block hash (applied last so filtered events do not
+		// consume the dedup slot)
+		if (deduplicateHash && bodyData.hash && isDuplicateHash(bodyData.hash, seenHashes)) {
 			return { noWebhookResponse: true };
 		}
 
@@ -421,6 +430,7 @@ async function fetchAccountInfo(
 				pending: true,
 			},
 			json: true,
+			timeout: 10000,
 		});
 
 		return {
@@ -517,25 +527,43 @@ export function isSubtypeAllowed(
 }
 
 /**
+ * Convert a user-supplied NANO decimal string filter threshold to raw units,
+ * throwing a clear error when the input is malformed.
+ */
+function filterAmountToRaw(context: IWebhookFunctions, input: string, label: string): string {
+	const trimmed = input.trim();
+	if (!/^\d+(\.\d{1,30})?$/.test(trimmed)) {
+		throw new NodeOperationError(
+			context.getNode(),
+			`${label} filter must be a decimal string with up to 30 decimal places: "${input}"`,
+		);
+	}
+	return nanoToRaw(trimmed);
+}
+
+/**
  * Validates if amount is within min/max range
+ * Comparisons are done on raw-unit strings with BigInt to avoid precision loss.
  */
 export function isAmountInRange(
-	amountNano: number | undefined,
-	minAmount: number | undefined,
-	maxAmount: number | undefined,
+	amountRaw: string | undefined,
+	minAmountRaw: string | undefined,
+	maxAmountRaw: string | undefined,
 ): boolean {
-	if (amountNano === undefined) {
+	if (!amountRaw) {
 		return true; // No amount data = pass through
 	}
 
-	if (minAmount && minAmount > 0) {
-		if (amountNano < minAmount) {
+	const amount = BigInt(amountRaw);
+
+	if (minAmountRaw !== undefined) {
+		if (amount < BigInt(minAmountRaw)) {
 			return false;
 		}
 	}
 
-	if (maxAmount && maxAmount > 0) {
-		if (amountNano > maxAmount) {
+	if (maxAmountRaw !== undefined) {
+		if (amount > BigInt(maxAmountRaw)) {
 			return false;
 		}
 	}
@@ -546,21 +574,14 @@ export function isAmountInRange(
 /**
  * Applies all filters to determine if webhook should trigger
  * Returns true if the webhook should be rejected (filtered out)
+ * Deduplication is handled separately by the caller (after filters).
  */
 export function shouldFilterWebhook(
 	bodyData: NanoCallbackPayload,
 	filterOptions: NanoFilterOptions,
-	amountNano: number | undefined,
-	seenHashes: Record<string, number>,
-	deduplicateHash: boolean,
+	minAmountRaw: string | undefined,
+	maxAmountRaw: string | undefined,
 ): boolean {
-	// Deduplication check
-	if (deduplicateHash && bodyData.hash) {
-		if (isDuplicateHash(bodyData.hash, seenHashes)) {
-			return true;
-		}
-	}
-
 	// Account filter
 	if (!isAccountAllowed(bodyData.account, filterOptions.accounts)) {
 		return true;
@@ -572,7 +593,7 @@ export function shouldFilterWebhook(
 	}
 
 	// Amount filter
-	if (!isAmountInRange(amountNano, filterOptions.minAmount, filterOptions.maxAmount)) {
+	if (!isAmountInRange(bodyData.amount, minAmountRaw, maxAmountRaw)) {
 		return true;
 	}
 

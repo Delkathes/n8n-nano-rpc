@@ -136,8 +136,10 @@ export async function dispatchNanoOperation(params: {
 					balanceRaw: balanceData.balance,
 					pending: rawToNano(balanceData.pending),
 					pendingRaw: balanceData.pending,
-					receivable: rawToNano(balanceData.receivable),
-					receivableRaw: balanceData.receivable,
+					...(balanceData.receivable !== undefined && {
+						receivable: rawToNano(balanceData.receivable),
+						receivableRaw: balanceData.receivable,
+					}),
 					balanceFormatted: formatNanoAmount(balanceData.balance),
 					pendingFormatted: formatNanoAmount(balanceData.pending),
 				};
@@ -257,8 +259,8 @@ export async function dispatchNanoOperation(params: {
 						type: tx.type,
 						subtype: tx.subtype,
 						account: tx.account,
-						amount: rawToNano(tx.amount),
-						amountRaw: tx.amount,
+						amount: raw ? rawToNano(tx.amount) : tx.amount,
+						amountRaw: raw ? tx.amount : nanoToRaw(tx.amount),
 						hash: tx.hash,
 						height: tx.height,
 						confirmed: tx.confirmed === 'true',
@@ -1293,7 +1295,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'walletReceivable': {
 				const manualWalletId = this.getNodeParameter('manualWalletId', i) as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('walletReceivableCount', i, 10) as number;
 				const balanceThreshold = this.getNodeParameter('balanceThreshold', i, '') as string;
 				const includeSource = this.getNodeParameter('includeSource', i, true) as boolean;
 				const includeActive = this.getNodeParameter(
@@ -1615,7 +1617,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'getChain': {
 				const blockHash = this.getNodeParameter('blockHash', i) as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('chainCount', i, 10) as number;
 				const offset = this.getNodeParameter('chainOffset', i, 0) as number;
 				const reverse = this.getNodeParameter('chainReverse', i, false) as boolean;
 
@@ -1679,7 +1681,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'getFrontiers': {
 				const startingAccount = this.getNodeParameter('startingAccount', i) as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('frontiersCount', i, 10) as number;
 
 				if (!isValidNanoAddress(startingAccount)) {
 					throw new NodeOperationError(
@@ -1932,12 +1934,13 @@ export async function dispatchNanoOperation(params: {
 					}
 				}
 
-				const { balances } = await rpc.getAccountsBalances(accounts, {
+				const balancesResult = await rpc.getAccountsBalances(accounts, {
 					includeOnlyConfirmed,
 				});
 
 				responseData = {
-					balances,
+					balances: balancesResult.balances,
+					...(balancesResult.errors && { errors: balancesResult.errors }),
 				};
 				break;
 			}
@@ -2026,12 +2029,12 @@ export async function dispatchNanoOperation(params: {
 			}
 
 			case 'getUnchecked': {
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('uncheckedCount', i, 10) as number;
 
 				const { blocks } = await rpc.getUnchecked(count);
 
 				responseData = {
-					count,
+					count: Array.isArray(blocks) ? blocks.length : Object.keys(blocks).length,
 					blocks,
 				};
 				break;
@@ -2234,7 +2237,7 @@ export async function dispatchNanoOperation(params: {
 			case 'epochUpgrade': {
 				const epoch = this.getNodeParameter('epoch', i) as number;
 				const epochKey = this.getNodeParameter('epochKey', i) as string;
-				const count = this.getNodeParameter('count', i, 1) as number;
+				const count = this.getNodeParameter('epochCount', i, 1) as number;
 
 				const { started } = await rpc.epochUpgrade(epoch, epochKey, count);
 
@@ -2281,7 +2284,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'republish': {
 				const republishHash = this.getNodeParameter('republishHash', i) as string;
-				const count = this.getNodeParameter('count', i, 1) as number;
+				const count = this.getNodeParameter('republishCount', i, 1) as number;
 				const sources = this.getNodeParameter('sources', i, 2) as number;
 				const destinations = this.getNodeParameter('destinations', i, 2) as number;
 
@@ -2315,7 +2318,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'getSuccessors': {
 				const startingBlock = this.getNodeParameter('startingBlock', i) as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('successorsCount', i, 10) as number;
 				const offset = this.getNodeParameter('chainOffset', i, 0) as number;
 				const reverse = this.getNodeParameter('chainReverse', i, false) as boolean;
 
@@ -2344,7 +2347,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'getUnopened': {
 				const unopenedAccount = this.getNodeParameter('unopenedAccount', i, '') as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('unopenedCount', i, 10) as number;
 
 				if (unopenedAccount && !isValidNanoAddress(unopenedAccount)) {
 					throw new NodeOperationError(
@@ -2365,12 +2368,14 @@ export async function dispatchNanoOperation(params: {
 			case 'getConfirmationActive': {
 				const announcements = this.getNodeParameter('announcements', i, 0) as number;
 
-				const confirmations = await rpc.getConfirmationActive(
+				const active = await rpc.getConfirmationActive(
 					announcements > 0 ? { announcements } : undefined,
 				);
 
 				responseData = {
-					confirmations,
+					confirmations: active.confirmations,
+					unconfirmed: active.unconfirmed,
+					confirmed: active.confirmed,
 				};
 				break;
 			}
@@ -2592,7 +2597,7 @@ export async function dispatchNanoOperation(params: {
 
 			case 'getUncheckedKeys': {
 				const uncheckedKey = this.getNodeParameter('uncheckedKey', i, '') as string;
-				const count = this.getNodeParameter('count', i, 10) as number;
+				const count = this.getNodeParameter('uncheckedKeysCount', i, 10) as number;
 
 				const keys = await rpc.getUncheckedKeys(uncheckedKey || undefined, count);
 

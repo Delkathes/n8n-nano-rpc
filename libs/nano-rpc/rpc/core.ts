@@ -42,13 +42,31 @@ function shouldRetry(error: unknown): boolean {
 }
 
 function redactParams(input: Record<string, unknown>): Record<string, unknown> {
-	const sensitiveKeys = new Set(['key', 'private_key', 'seed', 'password']);
+	const sensitiveKeys = new Set([
+		'key',
+		'private_key',
+		'seed',
+		'password',
+		'wallet',
+		'account',
+		'source',
+		'destination',
+		'hash',
+		'link',
+		'work',
+		'amount',
+		'json_block',
+	]);
 
 	const result: Record<string, unknown> = {};
 
 	for (const [key, value] of Object.entries(input)) {
 		if (sensitiveKeys.has(key.toLowerCase())) {
 			result[key] = '[REDACTED]';
+			continue;
+		}
+		if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+			result[key] = redactParams(value as Record<string, unknown>);
 			continue;
 		}
 		result[key] = value;
@@ -109,8 +127,8 @@ export async function nanoRPCCall<T = INanoRPCResponse>(
 
 			const canRetry = attempt < maxRetries && shouldRetry(error);
 			if (canRetry) {
-				// n8n cloud lint rules disallow timer usage in community nodes,
-				// so retries are immediate.
+				// Small backoff so transient failures have a chance to clear.
+				await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
 				continue;
 			}
 
@@ -120,7 +138,6 @@ export async function nanoRPCCall<T = INanoRPCResponse>(
 				`Nano RPC call failed for action "${action}": ${message}`,
 				{
 					description: `Attempt ${attempt + 1}/${maxRetries + 1} | URL: ${config.rpcUrl} | timeoutMs=${timeoutMs} | Params: ${JSON.stringify(redactParams(params))}`,
-					itemIndex: 0,
 				},
 			);
 		}

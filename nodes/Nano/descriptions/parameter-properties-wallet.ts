@@ -28,19 +28,6 @@ export const walletNanoRPCParameterProperties: INodeProperties[] = [
 			'Whether to generate work after creating account (v9.0+). Disabling can speed up account creation.',
 	},
 	{
-		displayName: 'Source Wallet (Manual)',
-		name: 'sourceWallet',
-		type: 'string',
-		displayOptions: {
-			show: {
-				operation: ['accountMove'],
-			},
-		},
-		default: '',
-		placeholder: 'Source wallet ID',
-		description: 'Wallet ID to move accounts from (optional), default to credential wallet ID',
-	},
-	{
 		displayName: 'Target Wallet',
 		name: 'targetWallet',
 		type: 'string',
@@ -384,6 +371,21 @@ export const walletNanoRPCParameterProperties: INodeProperties[] = [
 		default: false,
 		description:
 			'Whether to include receivable balance info (replaces deprecated pending parameter)',
+	},
+	{
+		displayName: 'Count',
+		name: 'walletReceivableCount',
+		type: 'number',
+		displayOptions: {
+			show: {
+				operation: ['walletReceivable'],
+			},
+		},
+		default: 10,
+		typeOptions: {
+			minValue: 1,
+		},
+		description: 'Number of receivable blocks to return',
 	},
 	{
 		displayName: 'Include Source',
