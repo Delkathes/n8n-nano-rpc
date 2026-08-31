@@ -1,0 +1,26 @@
+{
+	// ---- ESLint (flat config - ESLint 9) ----
+	"eslint.enable": true,
+	// Languages ESLint is activated for
+	"eslint.probe": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact",
+		"json",
+		"jsonc"
+	],
+	// Resolve the config + node_modules from this workspace folder (important for multi-root)
+	"eslint.workingDirectories": [{ "mode": "auto" }],
+	// Run ESLint's auto-fixable rules on save
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+
+	// ---- Prettier ----
+	// Use Prettier as the default formatter
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	// Only format files that have a Prettier config (this repo has .prettierrc.js)
+	"prettier.requireConfig": true
+}

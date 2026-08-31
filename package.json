@@ -8,6 +8,8 @@
 		"n8n-community-node-package",
 		"n8n",
 		"nano",
+		"nanocurrency",
+		"rpc",
 		"cryptocurrency",
 		"payments"
 	],
@@ -43,16 +45,16 @@
 		]
 	},
 	"devDependencies": {
-		"@n8n/node-cli": "0.29.1",
-		"@release-it-plugins/lerna-changelog": "^8.0.1",
-		"@release-it/conventional-changelog": "^11.0.0",
+		"@n8n/node-cli": "0.45.6",
+		"@release-it-plugins/lerna-changelog": "^9.0.0",
+		"@release-it/conventional-changelog": "^12.0.0",
 		"eslint": "9.39.4",
-		"prettier": "3.8.3",
-		"release-it": "19.2.4",
+		"prettier": "3.9.6",
+		"release-it": "21.0.2",
 		"typescript": "5.9.3"
 	},
 	"peerDependencies": {
-		"n8n-workflow": "^2.16.0"
+		"n8n-workflow": "*"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

@@ -1,8 +1,10 @@
 import {
-	IAuthenticateGeneric,
-	ICredentialTestRequest,
-	ICredentialType,
-	INodeProperties,
+	type IAuthenticate,
+	type ICredentialDataDecryptedObject,
+	type ICredentialTestRequest,
+	type ICredentialType,
+	type IHttpRequestOptions,
+	type INodeProperties,
 } from 'n8n-workflow';
 
 export class NanoApi implements ICredentialType {
@@ -16,8 +18,9 @@ export class NanoApi implements ICredentialType {
 			name: 'rpcUrl',
 			type: 'string',
 			default: 'http://localhost:7076',
-			description: 'URL of your Nano RPC node',
-			placeholder: 'https://proxy.nanos.cc/proxy',
+			description:
+				'URL of your Nano RPC node. For public proxies, e.g. https://rpc.nano.to (requires Bearer auth)',
+			placeholder: 'https://rpc.nano.to',
 		},
 		{
 			displayName: 'Authentication Method',
@@ -29,6 +32,11 @@ export class NanoApi implements ICredentialType {
 					value: 'none',
 				},
 				{
+					name: 'Bearer Token',
+					value: 'bearer',
+					description: 'Sends an "Authorization: Bearer <token>" header (used by rpc.nano.to)',
+				},
+				{
 					name: 'Basic Auth',
 					value: 'basic',
 				},
@@ -38,6 +46,22 @@ export class NanoApi implements ICredentialType {
 				},
 			],
 			default: 'none',
+		},
+		{
+			displayName: 'Bearer Token',
+			name: 'bearerToken',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
+			default: '',
+			description:
+				'Token sent as "Authorization: Bearer <token>". Required by public proxies like rpc.nano.to',
+			displayOptions: {
+				show: {
+					authMethod: ['bearer'],
+				},
+			},
 		},
 		{
 			displayName: 'Username',
@@ -119,18 +143,30 @@ export class NanoApi implements ICredentialType {
 		},
 	];
 
-	authenticate: IAuthenticateGeneric = {
-		type: 'generic',
-		properties: {
-			headers: {
-				'={{ $credentials.authMethod === "apiKey" ? ($credentials.headerName || "Authorization") : undefined }}':
-					'={{ $credentials.authMethod === "apiKey" ? $credentials.apiKey : undefined }}',
-			},
-			auth: {
-				username: '={{ $credentials.authMethod === "basic" ? $credentials.username : undefined }}',
-				password: '={{ $credentials.authMethod === "basic" ? $credentials.password : undefined }}',
-			},
-		},
+	authenticate: IAuthenticate = async (
+		credentials: ICredentialDataDecryptedObject,
+		requestOptions: IHttpRequestOptions,
+	): Promise<IHttpRequestOptions> => {
+		const authMethod = credentials.authMethod as string;
+
+		if (authMethod === 'bearer' && credentials.bearerToken) {
+			requestOptions.headers = {
+				...requestOptions.headers,
+				Authorization: `Bearer ${credentials.bearerToken}`,
+			};
+		} else if (authMethod === 'apiKey' && credentials.apiKey) {
+			requestOptions.headers = {
+				...requestOptions.headers,
+				[(credentials.headerName as string) || 'Authorization']: credentials.apiKey as string,
+			};
+		} else if (authMethod === 'basic') {
+			requestOptions.auth = {
+				username: credentials.username as string,
+				password: credentials.password as string,
+			};
+		}
+
+		return requestOptions;
 	};
 
 	test: ICredentialTestRequest = {

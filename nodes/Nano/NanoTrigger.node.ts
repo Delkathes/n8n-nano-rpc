@@ -39,7 +39,10 @@ export class NanoTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Nano Trigger',
 		name: 'nanoTrigger',
-		icon: 'file:nano.svg',
+		icon: {
+			light: 'file:nano.svg',
+			dark: 'file:nano.dark.svg',
+		},
 		group: ['trigger'],
 		version: 1,
 		subtitle: 'Webhook trigger',

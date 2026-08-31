@@ -31,7 +31,10 @@ export class Nano implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Nano Node RPC',
 		name: 'nano',
-		icon: 'file:nano.svg',
+		icon: {
+			light: 'file:nano.svg',
+			dark: 'file:nano.dark.svg',
+		},
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
