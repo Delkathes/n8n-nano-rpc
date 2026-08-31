@@ -139,7 +139,7 @@ Under **Options**, the node supports:
 ## Compatibility
 
 - Package is built with the n8n community node tooling (`@n8n/node-cli`).
-- Peer dependency: `n8n-workflow@^2.13.1`.
+- Peer dependency: `n8n-workflow` (any version supported by your n8n instance).
 - Use a Nano node version that supports the RPC actions you invoke.
 
 ## Development
