@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/Delkathes/n8n-nodes-nano-rpc/compare/0.1.2...0.1.3) (2026-08-31)
+
+### Bug Fixes
+
+* **trigger:** real Ed25519-blake2b signature verification, Buffer-safe HMAC, string-based send amounts ([c2a6646](https://github.com/Delkathes/n8n-nodes-nano-rpc/commit/c2a664642bf4e6b531b14dd5d11b9f6616f76ac3))
+* wire up missing count params, fix raw-mode history, dedupe dead UI fields, improve error handling ([25a172b](https://github.com/Delkathes/n8n-nodes-nano-rpc/commit/25a172b960704bd5b3452c6f1228b8ac93d21d09))
+* wire up missing count params, fix raw-mode history, dedupe dead UI fields, improve error handling ([2baf7ac](https://github.com/Delkathes/n8n-nodes-nano-rpc/commit/2baf7ac9f0b4ec5f487d4220727d6ccebe79d219))
+
 ## [0.1.2](https://github.com/Delkathes/nano-n8n-rpc/compare/0.1.1...0.1.2) (2026-08-31)
 
 ### Bug Fixes

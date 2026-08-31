@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-nano-rpc",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "n8n community node package to execute Nano node RPC commands",
 	"license": "MIT",
 	"homepage": "https://github.com/Delkathes/n8n-nodes-nano-rpc",
