@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/Delkathes/nano-n8n-rpc/compare/0.1.1...0.1.2) (2026-08-31)
+
+### Bug Fixes
+
+* make release tooling work with release-it 20 without GITHUB_AUTH ([a2f7e0d](https://github.com/Delkathes/nano-n8n-rpc/commit/a2f7e0d020b5972ded987d6a2793f05b63929fee))
+* ship credential icon in npm package and use release-it 21-compatible release command ([f119ba5](https://github.com/Delkathes/nano-n8n-rpc/commit/f119ba505410372b53c7b30cde56b72b4e409f8c))
+* update tsconfig to include node types and remove moduleResolution + new bearer credentials ([3d5f6b8](https://github.com/Delkathes/nano-n8n-rpc/commit/3d5f6b813656158aa61757adbce73849e786593a))
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
