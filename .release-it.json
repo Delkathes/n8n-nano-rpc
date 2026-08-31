@@ -9,10 +9,10 @@
     "publish": false
   },
   "github": {
-    "release": true
+    "release": false
   },
   "git": {
-    "commitMessage": "release v{{version}}"
+    "commitMessage": "release v${version}"
   },
   "hooks": {
     "after:bump": "npx n8n-node lint --fix && npx n8n-node build"
