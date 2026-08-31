@@ -44,7 +44,7 @@ export async function dispatchNanoOperation(params: {
 			case 'send': {
 				const manualWalletId = this.getNodeParameter('manualWalletId', i) as string;
 				const destination = this.getNodeParameter('destination', i) as string;
-				const amount = this.getNodeParameter('amount', i) as number;
+				const amount = this.getNodeParameter('amount', i) as string;
 				const sourceAccount = this.getNodeParameter(
 					'sourceAccount',
 					i,
@@ -77,7 +77,7 @@ export async function dispatchNanoOperation(params: {
 				if (!isValidPositiveNanoAmount(amount)) {
 					throw new NodeOperationError(
 						this.getNode(),
-						`Amount must be a positive number: ${amount}`,
+						`Amount must be a positive decimal string with up to 30 decimal places: ${amount}`,
 						{
 							itemIndex: i,
 						},

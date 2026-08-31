@@ -13,6 +13,8 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 import { rawToNano } from '../../utils/conversions';
 
+import { verifyBlockSignature } from '../../utils/block-signature';
+
 import type { BlockContents } from '../../types';
 
 /**
@@ -153,8 +155,7 @@ export class NanoTrigger implements INodeType {
 						name: 'validateSignature',
 						type: 'boolean',
 						default: false,
-						description:
-							'Whether to validate block signature (extra RPC call + requires credentials)',
+						description: 'Whether to cryptographically verify the block signature (Ed25519) and that the block contents hash to the reported hash. No extra RPC call needed.',
 					},
 					{
 						displayName: 'Enrich With Account Info',
@@ -267,9 +268,9 @@ export class NanoTrigger implements INodeType {
 		// Build base response
 		const webhookData = buildWebhookResponse(bodyData, parsedBlock, amountNano, includeBlock);
 
-		// Optional: Validate block signature
-		if (advancedOptions.validateSignature && bodyData.hash) {
-			webhookData.signatureValid = await validateBlockSignature(this, bodyData.hash);
+		// Optional: Validate block signature (cryptographic, client-side)
+		if (advancedOptions.validateSignature && parsedBlock) {
+			webhookData.signatureValid = verifyBlockSignature(parsedBlock, bodyData.hash);
 		}
 
 		// Optional: Enrich with account info
@@ -340,12 +341,19 @@ function verifyWebhookSignature(context: IWebhookFunctions, secret: string): boo
 		}
 
 		const rawBody = req.rawBody;
-		if (typeof rawBody !== 'string' || rawBody.length === 0) {
+		if (!rawBody) {
+			return false;
+		}
+
+		const bodyBuffer = Buffer.isBuffer(rawBody)
+			? rawBody
+			: Buffer.from(typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody), 'utf8');
+		if (bodyBuffer.length === 0) {
 			return false;
 		}
 
 		const expectedSig = Buffer.from(authHeader, 'hex');
-		const computedHmac = createHmac('sha256', secret).update(rawBody, 'utf8').digest();
+		const computedHmac = createHmac('sha256', secret).update(bodyBuffer).digest();
 
 		if (expectedSig.length !== computedHmac.length) {
 			return false;
@@ -386,34 +394,6 @@ function parseRequestBody(context: IWebhookFunctions): NanoCallbackPayload {
 	}
 
 	return bodyData;
-}
-
-/**
- * Validates block signature via RPC call
- */
-async function validateBlockSignature(context: IWebhookFunctions, hash: string): Promise<boolean> {
-	try {
-		const credentials = await context.getCredentials('nanoApi');
-		const rpcUrl = credentials.rpcUrl as string;
-
-		const httpRequestWithAuthentication =
-			context.helpers.httpRequestWithAuthentication.bind(context);
-
-		const validationResult = await httpRequestWithAuthentication('nanoApi', {
-			method: 'POST',
-			url: rpcUrl,
-			body: {
-				action: 'block_info',
-				json_block: true,
-				hash,
-			},
-			json: true,
-		});
-
-		return !!validationResult;
-	} catch {
-		return false;
-	}
 }
 
 /**

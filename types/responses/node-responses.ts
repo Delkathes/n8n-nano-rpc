@@ -151,7 +151,7 @@ export interface SendPaymentResponse {
 	success: boolean;
 	blockHash: string;
 	destination: string;
-	amount: number;
+	amount: string;
 	amountRaw: string;
 	source: string;
 	timestamp: string;

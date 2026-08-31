@@ -32,19 +32,18 @@ export const transactionNanoRPCParameterProperties: INodeProperties[] = [
 	{
 		displayName: 'Amount',
 		name: 'amount',
-		type: 'number',
+		type: 'string',
 		required: true,
 		displayOptions: {
 			show: {
 				operation: ['send'],
 			},
 		},
-		default: 0,
-		typeOptions: {
-			minValue: 0,
-			numberPrecision: 6,
-		},
-		description: 'Amount to send in NANO',
+		default: '',
+		placeholder: '0.5',
+		hint: 'Up to 30 decimal places',
+		description:
+			'Amount to send in NANO as a decimal string (e.g. "1.234567890123456789012345678901"). Nano has 30 decimal places; use a string to avoid floating-point rounding.',
 	},
 	{
 		displayName: 'Source Account',

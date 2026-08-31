@@ -38,10 +38,21 @@ export function isValidWorkValue(work: string): boolean {
 }
 
 /**
- * Validate positive finite Nano amount
+ * Validate a positive Nano amount given as a decimal string.
+ * Accepts up to 30 decimal places (Nano's precision) and rejects scientific
+ * notation, which would crash BigInt parsing.
  */
-export function isValidPositiveNanoAmount(amount: number): boolean {
-	return Number.isFinite(amount) && amount > 0;
+export function isValidPositiveNanoAmount(amount: string): boolean {
+	if (typeof amount !== 'string') {
+		return false;
+	}
+	const trimmed = amount.trim();
+	if (!/^\d+(\.\d{1,30})?$/.test(trimmed)) {
+		return false;
+	}
+	// Must be greater than zero
+	const [intPart, decPart] = trimmed.split('.');
+	return BigInt(intPart) > 0n || (decPart !== undefined && /[1-9]/.test(decPart));
 }
 
 /**
